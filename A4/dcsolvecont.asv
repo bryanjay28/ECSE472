@@ -1,0 +1,50 @@
+function Xdc = dcsolvecont(n_steps,maxerr)
+% Compute dc solution using newtwon iteration and continuation method
+% (power ramping approach)
+% inputs:
+% n_steps is the number of continuation steps between zero and one that are
+% to be taken. For the purposes of this assigments the steps should be 
+% linearly spaced (the matlab function "linspace" may be useful).
+% maxerr is the stopping criterion for newton iteration (stop iteration
+% when norm(deltaX)<maxerr
+
+global G C b
+
+cont_step = linspace(0,1,n_steps);
+
+% Set x_guess to be 0 since it's the trivial solution
+x_guess = zeros(length(G), 1);
+
+for i = 1:n_steps
+   dcsolvealpha() 
+end
+
+
+% get size of matrix
+size = length(G);
+
+% set the initial guess
+x = zeros(size, 1);
+
+% get h from step size
+h = 1/n_steps;
+
+delta_x = [100 ; 100];
+
+% Find the function using backward euler
+phi = @(X) (G + C/h)*X + f_vector(X) - C*X/h - b;
+
+% get the derrivative 
+syms X 
+phi_d = matlabFunction( diff(phi(X)) );
+
+delta = 0.0001;
+phi_d = @(x)( (phi(x+delta) - phi(x))./delta)
+
+while norm(delta_x) > maxerr
+    disp(phi_d)
+    delta_x = -1 * inv(phi_d(x)) * phi(x);
+    x = x + delta_x;
+end
+
+Xdc = x;
